@@ -351,14 +351,16 @@ A prefix check is performed in evaluation mode with dropout disabled. It verifie
 
 For the core-network objective, the level loss is masked SmoothL1 on standardized targets. A second masked SmoothL1 term supervises lag-$`d`$ increments, with $`d=5`$ steps at the one-second sampling interval.
 
-For either a predicted or observed future sequence $`z`$,
+For either a predicted or observed future sequence $`z`$, the initial increments use a historical anchor:
 
 ```math
-\Delta_d z_{j,c}=
-\begin{cases}
-z_{j,c}-\bar Y^{\mathrm{hist}}_{L-d+j,c}, & 0\le j<d,\\
-z_{j,c}-z_{j-d,c}, & d\le j<P.
-\end{cases}
+\Delta_d z_{j,c}=z_{j,c}-\bar Y^{\mathrm{hist}}_{L-d+j,c},\qquad 0\le j<d.
+```
+
+Once a lagged future value is available, the increments use that value:
+
+```math
+\Delta_d z_{j,c}=z_{j,c}-z_{j-d,c},\qquad d\le j<P.
 ```
 
 Predictions and targets share the same historical anchor. For the first $`d`$ positions, subtracting the two increments cancels that anchor, leaving the corresponding level error. Later increment errors compare prediction errors separated by $`d`$ steps.
