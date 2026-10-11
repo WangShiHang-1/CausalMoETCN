@@ -46,34 +46,34 @@ A scheduled plan and the realized network response are different objects. Delaye
 
 ### Causal interpretation
 
-Let $\mathcal H$ denote historical observations and let $Y^{\mathrm{fut}}[a]$ be the potential KPI trajectory under plan $a$ and the specified execution mechanism. The paper defines the target conditional expected response as
+Let $`\mathcal H`$ denote historical observations and let $`Y^{\mathrm{fut}}[a]`$ be the potential KPI trajectory under plan $`a`$ and the specified execution mechanism. The paper defines the target conditional expected response as
 
-$$
+```math
 \mu(\mathcal H,a)
 =
 \mathbb E[Y^{\mathrm{fut}}[a]\mid\mathcal H].
-$$
+```
 
 Identification from observational data requires:
 
 1. **Consistency:** the observed trajectory equals the potential trajectory under the adopted plan.
 2. **Conditional exchangeability at the plan level:**
 
-   $$
+   ```math
    Y^{\mathrm{fut}}[a]\ \perp\!\!\!\perp\ A^{\mathrm{fut}}\mid\mathcal H.
-   $$
+   ```
 
 3. **Positivity:** the target plan lies within the conditional support for the observed historical state.
 
 Under these conditions,
 
-$$
+```math
 \mu(\mathcal H,a)
 =
 \mathbb E[Y^{\mathrm{fut}}\mid\mathcal H,A^{\mathrm{fut}}=a].
-$$
+```
 
-The temporal restriction additionally uses **non-anticipation**: for the same history, plans that agree through step $j$ have the same potential responses through that step.
+The temporal restriction additionally uses **non-anticipation**: for the same history, plans that agree through step $`j`$ have the same potential responses through that step.
 
 The network's causal convolutions enforce a direction of temporal dependence. They do not establish exchangeability or positivity. Expert routing weights are also not estimates of causal effects. Matched no-operation windows are observed comparison samples, not observed counterfactual outcomes for the same operation window.
 
@@ -113,7 +113,7 @@ The manuscript describes 12 joint operation templates and a no-operation templat
 
 ### Historical feature layout
 
-The implementation packs the complete historical input into `history[B, L, 68]`. The value 68 is the width of the **packed history tensor**, not the number of additional covariates in the paper's separate $X$, $A$, and $Y$ notation.
+The implementation packs the complete historical input into `history[B, L, 68]`. The value 68 is the width of the **packed history tensor**, not the number of additional covariates in the paper's separate $`X`$, $`A`$, and $`Y`$ notation.
 
 Python slices below use an inclusive start and exclusive end.
 
@@ -147,17 +147,17 @@ For the inspected 100- and 200-step runners, the future plan, target, and future
 
 ### Relative-log KPI transform
 
-For each window and target channel, let $b_c$ be the median of the genuinely observed throughput values in the 60 seconds preceding the forecast origin. The archived transformation is
+For each window and target channel, let $`b_c`$ be the median of the genuinely observed throughput values in the 60 seconds preceding the forecast origin. The archived transformation is
 
-$$
+```math
 u_{i,c}=\log(1+y_{i,c})-\log(1+b_c),
-$$
+```
 
 where throughput is represented in bits per second. The transformed values are then standardized using the saved training statistics:
 
-$$
+```math
 z_{i,c}=\frac{u_{i,c}-m_c}{s_c}.
-$$
+```
 
 Historical KPI channels and future targets use the same target-channel statistics. Historical and future operation channels also use the same operation-channel statistics. The loader reads the saved scaler and does not refit it on validation or test data.
 
@@ -178,9 +178,9 @@ Historical covariates and KPIs are forward-filled using only earlier observation
 
 Covariate availability is represented by observation indicators and
 
-$$
+```math
 \log(1+\min(\mathrm{age},86400)),
-$$
+```
 
 where age is measured in seconds. These channels distinguish an available observation from an old or imputed value.
 
@@ -194,9 +194,9 @@ For a lagged difference, **both endpoints must be valid**. A finite imputed valu
 
 A raw no-operation plan maps to
 
-$$
+```math
 a_{\mathrm{no\ operation}}^{\mathrm{std}}=-m_a/s_a.
-$$
+```
 
 It is generally not an all-zero vector after standardization. The paper's **w/o Future Plan** ablation explicitly uses an all-zero input in the standardized space. That ablation should not be described as inserting the transformed raw no-operation plan.
 
@@ -230,7 +230,7 @@ Operation values + signed/absolute differences --> FiLM parameters ---------+
 
 ### 1. Projection and concatenation
 
-Historical observations and future plans use separate $1\times1$ projections and learnable segment embeddings. Their projected representations are concatenated **along time**, producing a sequence of length $L+P$.
+Historical observations and future plans use separate $`1\times1`$ projections and learnable segment embeddings. Their projected representations are concatenated **along time**, producing a sequence of length $`L+P`$.
 
 This operation is different from the relative-index channel concatenation used by some adapted forecasting baselines.
 
@@ -238,19 +238,19 @@ This operation is different from the relative-index channel concatenation used b
 
 The backward difference is the current value minus the previous value, with the first position set to zero. Operation differences are computed on the concatenated historical/future timeline:
 
-$$
+```math
 \Delta \bar A_L=\bar A^{\mathrm{fut}}_0-\bar A^{\mathrm{hist}}_{L-1}.
-$$
+```
 
 The boundary difference is retained; it is not reset to zero at the forecast origin. KPI differences are computed from the preprocessed historical KPI values. Their future segment is filled with zeros because future KPI changes are unknown.
 
 The event input contains signed and absolute KPI and operation differences:
 
-$$
+```math
 D_i=[\Delta\bar Y_i,\ |\Delta\bar Y_i|,\ \Delta\bar A_i,\ |\Delta\bar A_i|].
-$$
+```
 
-For three KPI channels and 11 operation channels, it has 28 channels. Two bias-free $1\times1$ convolutions with an intervening GELU activation map it to the hidden width. This construction satisfies $\phi_e(0)=0$.
+For three KPI channels and 11 operation channels, it has 28 channels. Two bias-free $`1\times1`$ convolutions with an intervening GELU activation map it to the hidden width. This construction satisfies $`\phi_e(0)=0`$.
 
 A sigmoid gate combines event features with the projected timeline. Historical availability indicators enter through the historical projection, rather than being treated as KPI differences.
 
@@ -269,7 +269,7 @@ The inspected core-network configuration uses:
 | Normalization | Layer normalization over channels independently at each time step |
 | Backbone receptive field | 1,081 steps |
 
-The receptive field above is that of the TCN backbone, computed as $1+2(k-1)\sum_\ell d_\ell$. Difference features and the expert convolution add dependencies beyond the backbone itself; 1,081 should not be interpreted as the full model's exact receptive field.
+The receptive field above is that of the TCN backbone, computed as $`1+2(k-1)\sum_\ell d_\ell`$. Difference features and the expert convolution add dependencies beyond the backbone itself; 1,081 should not be interpreted as the full model's exact receptive field.
 
 ### 4. Operation-conditioned FiLM
 
@@ -277,12 +277,12 @@ The FiLM condition vector contains operation values, signed operation difference
 
 The modulation is
 
-$$
+```math
 \gamma_i=1+\tanh(r_{\gamma,i}),\qquad
 H'_i=\gamma_i\odot H_i+\beta_i.
-$$
+```
 
-The scale lies in $(0,2)$ and can vary around one. FiLM acts on the full historical/future timeline after the TCN and before the expert module.
+The scale lies in $`(0,2)`$ and can vary around one. FiLM acts on the full historical/future timeline after the TCN and before the expert module.
 
 ### 5. Expert fusion
 
@@ -302,11 +302,11 @@ The experts process the full modulated timeline before their future outputs are 
 - Weights are not separately predicted for each KPI.
 - Expert identities are not supervised as “fault,” “normal,” or “recovery” categories.
 
-The weighted expert features are added to the modulated state, divided by $\sqrt{2}$, normalized, and passed to a shared output head. All future KPI values are produced in one forward pass, without autoregressive rollout.
+The weighted expert features are added to the modulated state, divided by $`\sqrt{2}`$, normalized, and passed to a shared output head. All future KPI values are produced in one forward pass, without autoregressive rollout.
 
 ### Shape reference
 
-Here $B$ is batch size, $C=256$, and $K=4$ for the inspected core-network configuration.
+Here $`B`$ is batch size, $`C=256`$, and $`K=4`$ for the inspected core-network configuration.
 
 | Tensor | Shape |
 |---|---|
@@ -323,15 +323,15 @@ The implementation transposes hidden tensors to `[B, C, T]` for convolution. The
 
 ## Operation-prefix constraint
 
-With fixed history, parameters, and deterministic inference, predictions through future step $j$ depend only on operation tokens through $j$:
+With fixed history, parameters, and deterministic inference, predictions through future step $`j`$ depend only on operation tokens through $`j`$:
 
-$$
+```math
 \widehat Y^{\mathrm{fut}}_{0:j}
 =
 F_{\theta,0:j}(\mathcal H,A^{\mathrm{fut}}_{0:j}).
-$$
+```
 
-Editing only the plan after $j$ must leave earlier predictions unchanged, up to numerical tolerance.
+Editing only the plan after $`j`$ must leave earlier predictions unchanged, up to numerical tolerance.
 
 This property depends on the complete computation:
 
@@ -349,25 +349,25 @@ A prefix check is performed in evaluation mode with dropout disabled. It verifie
 
 ### Level and difference supervision
 
-For the core-network objective, the level loss is masked SmoothL1 on standardized targets. A second masked SmoothL1 term supervises lag-$d$ increments, with $d=5$ steps at the one-second sampling interval.
+For the core-network objective, the level loss is masked SmoothL1 on standardized targets. A second masked SmoothL1 term supervises lag-$`d`$ increments, with $`d=5`$ steps at the one-second sampling interval.
 
-For either a predicted or observed future sequence $z$,
+For either a predicted or observed future sequence $`z`$,
 
-$$
+```math
 \Delta_d z_{j,c}=
 \begin{cases}
 z_{j,c}-\bar Y^{\mathrm{hist}}_{L-d+j,c}, & 0\le j<d,\\
 z_{j,c}-z_{j-d,c}, & d\le j<P.
 \end{cases}
-$$
+```
 
-Predictions and targets share the same historical anchor. For the first $d$ positions, subtracting the two increments cancels that anchor, leaving the corresponding level error. Later increment errors compare prediction errors separated by $d$ steps.
+Predictions and targets share the same historical anchor. For the first $`d`$ positions, subtracting the two increments cancels that anchor, leaving the corresponding level error. Later increment errors compare prediction errors separated by $`d`$ steps.
 
-The core-network objective uses SmoothL1 threshold $\tau=0.5$ and
+The core-network objective uses SmoothL1 threshold $`\tau=0.5`$ and
 
-$$
+```math
 J=J_{\mathrm{level}}+\lambda J_\Delta,\qquad \lambda=1.
-$$
+```
 
 Each term averages over its own valid entries; a term is zero when its valid set is empty.
 
@@ -375,12 +375,12 @@ Each term averages over its own valid entries; a term is zero when its valid set
 
 The core-network validation selection score is
 
-$$
+```math
 S_{\mathrm{val}}
 =
 \mathrm{MAE}_{\mathrm{val}}
 +0.25\,\mathrm{MAE}_{\Delta_5,\mathrm{val}}.
-$$
+```
 
 The coefficient 0.25 belongs to **checkpoint selection**, not to the training loss. It must not replace the training difference-loss weight of one.
 
@@ -389,8 +389,8 @@ The coefficient 0.25 belongs to **checkpoint selection**, not to the training lo
 | Setting | Manuscript value |
 |---|---|
 | Optimizer | AdamW |
-| Learning rate | $5\times10^{-4}$ |
-| Weight decay | $10^{-4}$ |
+| Learning rate | 5 × 10⁻⁴ |
+| Weight decay | 10⁻⁴ |
 | Batch size | 144 |
 | Maximum epochs | 100 |
 | Early-stopping patience | 10 |
@@ -427,9 +427,9 @@ The manuscript's CausalMoETCN result, MAE **0.2376 ± 0.0070** and MSE **0.4127 
 
 | Setting | Matching run |
 |---|---|
-| Objective | $0.25\,\mathrm{MSE}+0.75\,\mathrm{SmoothL1}_{\tau=1}$ |
-| Learning rate | $5\times10^{-4}$ |
-| Weight decay | $5\times10^{-4}$ |
+| Objective | 0.25 × MSE + 0.75 × SmoothL1 (τ = 1) |
+| Learning rate | 5 × 10⁻⁴ |
+| Weight decay | 5 × 10⁻⁴ |
 | Dropout | 0.05 |
 | Seeds | 2026–2030 |
 | Budget | 20 epochs |
@@ -450,20 +450,20 @@ The manuscript's CausalMoETCN result, MAE **0.2776 ± 0.0018** and MSE **0.4929 
 | Hidden channels / experts | 64 / 2 |
 | Objective | Level SmoothL1 + 0.05 × one-step difference SmoothL1 |
 | SmoothL1 threshold | 0.1 |
-| Learning rate | $2\times10^{-4}$ |
-| Weight decay | $10^{-4}$ |
+| Learning rate | 2 × 10⁻⁴ |
+| Weight decay | 10⁻⁴ |
 | Dropout | 0.15 |
 | Seeds | 2026, 2027, 2028 |
 | Budget | 20 epochs |
 
 The selection study evaluated six candidates on training/validation data, screened them with two seeds, and added a third seed for the two finalists. It used a normalized validation criterion
 
-$$
+```math
 S=\max\left(
 \frac{\mathrm{MAE}_{\mathrm{val}}}{0.09190142362154563},
 \frac{\mathrm{MSE}_{\mathrm{val}}}{0.03600562058092182}
 \right),
-$$
+```
 
 with lower values preferred. Checkpoint selection used the saved epoch-10/epoch-20 validation endpoints. The final configuration was compared against the existing reference before the new winner was evaluated on the test date.
 
@@ -509,15 +509,25 @@ Values are on the dataset-specific evaluation scales described above. Different 
 
 ### Core-network ablations at 300 steps
 
-| Variant | Change | MAE ↓ | MSE ↓ |
-|---|---|---:|---:|
-| Full | Complete model | 0.4738 ± 0.0011 | 0.4490 ± 0.0016 |
-| w/o Future Plan | Replace future plan with standardized zeros consistently across plan-dependent branches | 0.5342 ± 0.0074 | 0.5580 ± 0.0182 |
-| w/o Event | Remove event-feature injection | 0.4810 ± 0.0074 | 0.4626 ± 0.0114 |
-| w/o FiLM | Use TCN states as expert and router inputs | 0.4961 ± 0.0050 | 0.4789 ± 0.0106 |
-| w/o MoE | Use modulated states as output-head inputs | 0.5012 ± 0.0046 | 0.4806 ± 0.0034 |
-| Uniform Router | Retain all experts with weights fixed at $1/K$ | 0.4772 ± 0.0062 | 0.4557 ± 0.0105 |
-| w/o $J_\Delta$ | Train with the level loss only | 0.4928 ± 0.0058 | 0.4830 ± 0.0100 |
+| Variant | MAE ↓ | MSE ↓ |
+|---|---:|---:|
+| Full | 0.4738 ± 0.0011 | 0.4490 ± 0.0016 |
+| w/o Future Plan | 0.5342 ± 0.0074 | 0.5580 ± 0.0182 |
+| w/o Event | 0.4810 ± 0.0074 | 0.4626 ± 0.0114 |
+| w/o FiLM | 0.4961 ± 0.0050 | 0.4789 ± 0.0106 |
+| w/o MoE | 0.5012 ± 0.0046 | 0.4806 ± 0.0034 |
+| Uniform Router | 0.4772 ± 0.0062 | 0.4557 ± 0.0105 |
+| w/o J<sub>Δ</sub> | 0.4928 ± 0.0058 | 0.4830 ± 0.0100 |
+
+Variant definitions:
+
+- **Full:** Complete model.
+- **w/o Future Plan:** Replace future plan with standardized zeros consistently across plan-dependent branches.
+- **w/o Event:** Remove event-feature injection.
+- **w/o FiLM:** Use TCN states as expert and router inputs.
+- **w/o MoE:** Use modulated states as output-head inputs.
+- **Uniform Router:** Retain all experts with weights fixed at 1/K.
+- **w/o J<sub>Δ</sub>:** Train with the level loss only.
 
 Dynamic routing has slightly lower mean errors than uniform weighting in this table. The table alone does not establish statistical significance or an interpretable assignment of network mechanisms to experts.
 
