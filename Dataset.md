@@ -2,7 +2,7 @@
 
 ## 1. Dataset Overview
 
-The core-network dataset was collected from a Kubernetes-based 5G core-network and radio access network (RAN) testbed built upon free5GC. The testbed consists of four base stations and 40 user equipment (UE) devices. Controlled faults and operational events were introduced to generate diverse network conditions and record the resulting network responses. The data were collected in seven independent batches (D01–D07) and aligned to a one-second time grid (1 Hz), although individual indicators may have different underlying update intervals.
+The core-network dataset was collected from a Kubernetes-based 5G core-network and radio access network (RAN) testbed built upon free5GC. The testbed consists of four base stations and 40 user equipment (UE) devices. Controlled faults and operational events were introduced to generate diverse network conditions and record the resulting network responses. The data were collected in seven independent batches (D01–D07), with telemetry recorded at one-second intervals. Individual indicators may have different underlying update intervals.
 
 Three throughput indicators are used as the main performance measures: N3 uplink bit rate, N3 downlink bit rate, and N6 aggregate bit rate. In addition, 18 network and system indicators are recorded, covering session activity, service performance, RAN status, and host resource utilization.
 
@@ -11,14 +11,14 @@ Three throughput indicators are used as the main performance measures: N3 uplink
 | Collection environment | Kubernetes-based free5GC 5G core-network and RAN testbed |
 | Testbed scale | 4 base stations and 40 UE devices |
 | Collection batches | 7 independent batches (D01–D07) |
-| Temporal resolution | 1 s |
+| Data collection interval | 1 s |
 | Main performance indicators | 3 throughput KPIs |
 | Additional indicators | 18 network and system indicators |
 | Operational event types | 9 operation types |
 | Service groups | Gold and Silver |
 | Joint operation configurations | 12 |
-| Planned event duration | 120 or 180 s |
-| Historical window | 300 s |
+| Planned event duration | 120 or 180 steps |
+| Historical window | 300 steps |
 | Retained windows | 1,006 |
 
 ## 2. Network and System Indicators
@@ -85,11 +85,11 @@ The observed data contain 12 joint operation configurations, formed by combining
 | N6 blocking | UE scale-down | UE recreation |
 | UPF shutdown | UE recreation | Base-station restart |
 
-A no-operation condition is also included as the baseline condition. Operational events were scheduled for either 120 or 180 s. The recorded network responses may persist beyond the scheduled event duration because service recovery is not necessarily instantaneous.
+A no-operation condition is also included as the baseline condition. Operational events were scheduled for either 120 or 180 steps. The recorded network responses may persist beyond the scheduled event duration because service recovery is not necessarily instantaneous.
 
 ## 4. Data Windowing and Split
 
-The retained dataset contains 503 intervention windows and 503 matched non-intervention windows, resulting in 1,006 windows in total. Each window contains 300 s of historical observations and is associated with an operational event or a corresponding non-intervention condition.
+The retained dataset contains 503 intervention windows and 503 matched non-intervention windows, resulting in 1,006 windows in total. Each window contains 300 historical steps and is associated with an operational event or a corresponding non-intervention condition.
 
 The data are divided by collection batch rather than by randomly shuffling individual windows, reducing potential information leakage between training and evaluation sets.
 
@@ -102,4 +102,4 @@ The data are divided by collection batch rather than by randomly shuffling indiv
 
 ## 5. Data Preprocessing
 
-The telemetry records are aligned to a one-second time grid. Historical missing observations are filled using available past observations, with training-set statistics used as fallback values when necessary. Missing target measurements are excluded from subsequent evaluation. The three throughput indicators are transformed using a logarithmic transformation relative to a historical baseline and then standardized using statistics calculated from the training set only. The same transformation parameters are applied to the validation and test sets.
+Historical missing observations are filled using available past observations, with training-set statistics used as fallback values when necessary. Missing target measurements are excluded from subsequent evaluation. The three throughput indicators are transformed using a logarithmic transformation relative to a historical baseline and then standardized using statistics calculated from the training set only. The same transformation parameters are applied to the validation and test sets.
